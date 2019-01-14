@@ -42,7 +42,7 @@ router.post('/signup', (req, res, next) => {
 });
 
 router.get('/', (req, res, next) => {
-  User.find().exec().then(users => {
+  User.find().select('email _id').exec().then(users => {
     res.status(200).json({
       count: users.length,
       users: users

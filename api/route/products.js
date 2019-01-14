@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
+const checkAuth = require('../middleware/check-auth');
 
 const storage = multer.diskStorage({
   destination: function(req, file, cb) {
@@ -51,13 +52,13 @@ router.get('/', (req, res, next) => {
 })
 
 
-router.post('/', upload.single('asset'), (req, res, next) => {
+router.post('/', upload.single('asset'), checkAuth, (req, res, next) => {
   const { name, price } = req.body;
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
     name,
     price,
-    asset: req.file.path
+    asset: req && req.file && req.file.path
   })
 
   product.save().then( result => {
@@ -102,7 +103,7 @@ router.get('/:productId', (req, res, next) => {
   })
 })
 
-router.patch('/:productId', (req, res, next) => {
+router.patch('/:productId', checkAuth, (req, res, next) => {
   
   Product.update({_id: req.params.productId }, { $set: { name: req.body.name, price: req.body.price } }).exec().then( result => {
     res.status(200).json({
@@ -117,7 +118,7 @@ router.patch('/:productId', (req, res, next) => {
   })
 })
 
-router.delete('/:productId', (req, res, next) => {
+router.delete('/:productId', checkAuth, (req, res, next) => {
   Product.deleteOne ({ _id: req.params.productId }).exec().then(result => {
     res.status(200).json({ message: 'Product has been deleted successfully!'})
   }).catch(err => {
