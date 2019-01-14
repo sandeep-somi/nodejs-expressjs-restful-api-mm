@@ -1,5 +1,6 @@
 {
   "env": {
-    "MONGO_ATLAS_PW": "node-user"
+    "MONGO_ATLAS_PW": "node-user",
+    "JWT_KEY": "secretsuperstar"
   }
 }

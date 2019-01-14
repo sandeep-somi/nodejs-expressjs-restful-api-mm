@@ -29,7 +29,7 @@ router.post('/', (req, res, next) => {
   const { productId, quantity } = req.body;
   Product.findById(productId).select('_id name price').then(product => {
     const order = new Order({
-      _id: mongoose.Types.ObjectId(),
+      _id: new mongoose.Types.ObjectId(),
       productId,
       quantity
     });
@@ -97,7 +97,7 @@ router.patch('/:orderId', (req, res, next) => {
 
 router.delete('/:orderId', (req, res, next) => {
   const { orderId } = req.params;
-  Order.remove({ _id: orderId }).then(result => {
+  Order.deleteOne({ _id: orderId }).then(result => {
     res.status(200).json({
       message: 'Order has been deleted successfully!'
     })

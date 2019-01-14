@@ -2,18 +2,43 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
-const upload = multer({ dest: 'uploads/' })
+
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+    cb(null, './uploads/');
+  },
+  filename: function (req, file, cb) {
+    cb(null, Date.now() + file.originalname);
+  }
+})
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png') {
+    cb(null, true);
+  } else {
+    cb(null, null);
+  }
+}
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 1024 * 1024 * 5
+  },
+  fileFilter: fileFilter
+});
 
 const Product = require('../models/product');
 
 router.get('/', (req, res, next) => {
-  Product.find().select('name price _id').exec().then( result => {
+  Product.find().select('name price _id asset').exec().then( result => {
     res.status(200).json({
       count: result.length,
       values: result.map(item => ({ 
         name: item.name,
         price: item.price,
         id: item._id,
+        asset: item.asset,
         request: {
           type: 'GET',
           link: 'http://localhost:8000/products/' + item._id
@@ -27,12 +52,12 @@ router.get('/', (req, res, next) => {
 
 
 router.post('/', upload.single('asset'), (req, res, next) => {
-  console.log(req.file, 'files')
   const { name, price } = req.body;
   const product = new Product({
-    _id: mongoose.Types.ObjectId(),
+    _id: new mongoose.Types.ObjectId(),
     name,
-    price
+    price,
+    asset: req.file.path
   })
 
   product.save().then( result => {
@@ -42,6 +67,7 @@ router.post('/', upload.single('asset'), (req, res, next) => {
         id: result._id,
         name: result.name,
         price: result.price,
+        asset: result.asset,
         request: {
           type: 'GET',
           link: 'http://localhost:8000/products/' + result._id
@@ -92,7 +118,7 @@ router.patch('/:productId', (req, res, next) => {
 })
 
 router.delete('/:productId', (req, res, next) => {
-  Product.remove({_id: req.params.productId }).exec().then(result => {
+  Product.deleteOne ({ _id: req.params.productId }).exec().then(result => {
     res.status(200).json({ message: 'Product has been deleted successfully!'})
   }).catch(err => {
     res.status(500).json(err)

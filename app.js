@@ -7,6 +7,7 @@ const config = require('./config');
 
 const productRoutes = require('./api/route/products');
 const orderRoutes = require('./api/route/orders');
+const userRoutes = require('./api/route/users');
 
 mongoose.connect(config.connectURI, { useNewUrlParser: true });
 mongoose.Promise = global.Promise;
@@ -15,8 +16,10 @@ app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
+app.use('/uploads', express.static('uploads'));
 app.use('/products', productRoutes);
 app.use('/orders', orderRoutes);
+app.use('/users', userRoutes);
 
 app.use((req, res, next) => {
   res.header('Access-Contorl-Allow-Origin', '*');
