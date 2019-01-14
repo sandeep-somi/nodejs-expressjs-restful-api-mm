@@ -35,6 +35,19 @@ exports.signup = (req, res, next) => {
       });
     }
   });
+};
+
+exports.getAllUsers = (req, res, next) => {
+  User.find().select('email _id').exec().then(users => {
+    res.status(200).json({
+      count: users.length,
+      users: users
+    })
+  }).catch(err => {
+    res.status(500).json({
+      error: err
+    })
+  })
 }
 
 exports.login = (req, res, next) => {

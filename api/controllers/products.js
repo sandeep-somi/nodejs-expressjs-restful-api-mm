@@ -1,4 +1,5 @@
 const Product = require('../models/product');
+const mongoose = require('mongoose');
 
 exports.getAllProducts = (req, res, next) => {
   Product.find().select('name price _id asset').exec().then(result => {
@@ -21,6 +22,7 @@ exports.getAllProducts = (req, res, next) => {
 }
 
 exports.createProduct = (req, res, next) => {
+  console.log(req.body, 'req.body');
   const { name, price } = req.body;
   const product = new Product({
     _id: new mongoose.Types.ObjectId(),
@@ -30,6 +32,7 @@ exports.createProduct = (req, res, next) => {
   })
 
   product.save().then(result => {
+    console.log(result, 'result');
     res.status(201).json({
       message: 'Product created successfully!',
       product: {
@@ -44,18 +47,19 @@ exports.createProduct = (req, res, next) => {
       }
     })
   }).catch(err => {
-    res.status(500).json(err)
+    res.status(500).json({ error: err })
   })
 }
 
 exports.getProductById = (req, res, next) => {
   const { productId } = req.params;
-  Product.findById(productId).select('_id name price').exec().then(result => {
+  Product.findById(productId).select('_id name price asset').exec().then(result => {
     if (result) {
       res.status(200).json({
         id: result._id,
         name: result.name,
         price: result.price,
+        asset: result.asset,
         request: {
           type: 'GET',
           link: 'http://localhost:8000/porducts/' + result._id
@@ -74,17 +78,22 @@ exports.getProductById = (req, res, next) => {
 }
 
 exports.updateProduct = (req, res, next) => {
-
-  Product.update({ _id: req.params.productId }, { $set: { name: req.body.name, price: req.body.price } }).exec().then(result => {
-    res.status(200).json({
-      message: 'Product has been updated successfully!',
-      request: {
-        type: 'GET',
-        link: 'http://localhost:8000/products/' + req.params.productId
-      }
+  const { productId } = req.params;
+  Product.updateOne({ _id: productId }, { $set: { name: req.body.name, price: req.body.price } }).exec().then(result => {
+    console.log(esult, 'result');
+    
+    Product.findById(productId).select('_id name price asset').exec().then(product => {
+      res.status(200).json({
+        name: product.name,
+        id: product._id,
+        price: product.price,
+        asset: product.asset
+      })
+    }).catch(err => {
+      res.status(500).json({ error: err })  
     })
   }).catch(err => {
-    res.status(500).json(err)
+    res.status(500).json({ error: err })
   })
 }
 
